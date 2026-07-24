@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Listening study — melody continuations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12161f; --slate:#1b2130; --slate-hi:#222a3c; --rule:#2f3849;
+  --brass:#d8a13a; --brass-dim:#8a6a2c; --pearl:#e2e6ee; --muted:#7d8798;
+  --green:#7cc496; --green-dim:rgba(124,196,150,.13); --green-edge:rgba(124,196,150,.34);
+  --display:'Fraunces',Georgia,serif; --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace; --step:1.5rem;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--ink);color:var(--pearl);font-family:var(--sans);
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(900px 500px at 50% -10%,rgba(216,161,58,.10),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:clamp(1.5rem,4vw,3rem) 1.25rem 5rem}
+
+h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.01em;margin:0}
+h1{font-size:clamp(2rem,6vw,2.9rem);line-height:1.1}
+h2{font-size:clamp(1.4rem,4vw,1.8rem);line-height:1.2}
+p{margin:.85rem 0}
+.lede{font-size:1.06rem;color:#c3cad6;max-width:52ch}
+.muted{color:var(--muted)} .small{font-size:.875rem}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--brass);margin-bottom:.9rem}
+
+.card{background:var(--slate);border:1px solid var(--rule);border-radius:14px;
+  padding:1.35rem;margin:var(--step) 0;position:relative;transition:border-color .45s ease}
+.card > *{position:relative;z-index:1}
+
+button{font:inherit;cursor:pointer;border-radius:10px;
+  transition:background .15s,border-color .15s,transform .1s,color .15s}
+button:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+button:disabled{cursor:not-allowed;opacity:.4}
+.btn{background:var(--brass);color:#1a1408;border:none;padding:.8rem 1.6rem;font-weight:600}
+.btn:hover:not(:disabled){background:#e8b04a}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn-ghost{background:transparent;color:var(--pearl);border:1px solid var(--rule);padding:.7rem 1.2rem}
+.btn-ghost:hover:not(:disabled){border-color:var(--brass);background:var(--slate-hi)}
+
+.choices{display:grid;gap:.9rem;grid-template-columns:1fr 1fr;margin-top:.75rem}
+@media(max-width:520px){.choices{grid-template-columns:1fr}}
+.choice{background:var(--slate-hi);color:var(--pearl);border:1px solid var(--rule);
+  padding:.95rem 1rem;text-align:left;font-weight:500}
+.choice:hover:not(:disabled){border-color:var(--brass-dim)}
+.choice[aria-pressed="true"]{border-color:var(--brass);background:rgba(216,161,58,.14);color:#f2d9a4}
+.choice .tag{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
+.choice[aria-pressed="true"] .tag{color:var(--brass)}
+
+/* ---------- handoff bar + completion states ---------- */
+.clip{margin:0 0 1.5rem;position:relative}
+.clip:last-of-type{margin-bottom:0}
+.clip::before{
+  content:"";position:absolute;z-index:0;pointer-events:none;border-radius:12px;
+  top:-10px;left:-12px;right:-12px;bottom:-10px;
+  background:transparent;border:1px solid transparent;
+  transition:background .45s ease,border-color .45s ease,
+             top .55s cubic-bezier(.4,0,.2,1),bottom .55s cubic-bezier(.4,0,.2,1),
+             left .55s cubic-bezier(.4,0,.2,1),right .55s cubic-bezier(.4,0,.2,1);
+}
+.clip.done::before{background:var(--green-dim);border-color:var(--green-edge)}
+.card.merged .clip.done::before{
+  top:var(--exp-top);bottom:var(--exp-bottom);left:var(--exp-left);right:var(--exp-right);
+  border-color:transparent;
+}
+.card.merged{border-color:var(--green-edge)}
+.card.merged::after{
+  content:"";position:absolute;inset:0;border-radius:14px;z-index:0;
+  background:var(--green-dim);opacity:0;transition:opacity .5s ease .2s;
+}
+.card.merged.settled::after{opacity:1}
+.clip > *{position:relative;z-index:1}
+
+.cliphead{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:.6rem}
+.clipname{font-family:var(--mono);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.phase{font-family:var(--mono);font-size:.75rem;letter-spacing:.1em;color:var(--muted);transition:color .25s}
+.phase.is-seed{color:var(--brass)} .phase.is-cont{color:var(--pearl)}
+.phase.is-done{color:var(--green)}
+
+.bar{position:relative;height:58px;border-radius:10px;overflow:hidden;
+  background:#151a26;border:1px solid var(--rule);cursor:pointer;transition:border-color .35s}
+.clip.done .bar{border-color:var(--green-edge)}
+.bar:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+.seg{position:absolute;top:0;bottom:0}
+.seg-seed{background:linear-gradient(180deg,rgba(216,161,58,.30),rgba(216,161,58,.13))}
+.seg-gap{background:repeating-linear-gradient(90deg,transparent 0 5px,rgba(125,135,152,.22) 5px 6px)}
+.seg-cont{background:linear-gradient(180deg,rgba(226,230,238,.16),rgba(226,230,238,.06))}
+.ticks{position:absolute;inset:0;pointer-events:none}
+.tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.055)}
+.playhead{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--pearl);
+  left:0;opacity:0;box-shadow:0 0 10px rgba(226,230,238,.6)}
+.playhead.on{opacity:1}
+.barlabel{position:absolute;bottom:5px;font-family:var(--mono);font-size:.62rem;
+  letter-spacing:.1em;text-transform:uppercase;color:rgba(226,230,238,.5);pointer-events:none}
+.playbtn{position:absolute;top:50%;left:12px;transform:translateY(-50%);
+  width:34px;height:34px;border-radius:50%;border:1px solid var(--rule);
+  background:rgba(18,22,31,.85);color:var(--pearl);display:grid;place-items:center;
+  font-size:.8rem;line-height:1}
+.bar:hover .playbtn{border-color:var(--brass)}
+.handoff-pulse{position:absolute;top:0;bottom:0;width:2px;background:var(--brass);opacity:0}
+@keyframes pulse{0%{opacity:0}30%{opacity:1;box-shadow:0 0 16px rgba(216,161,58,.9)}100%{opacity:0}}
+.handoff-pulse.fire{animation:pulse .9s ease-out}
+
+.cliptools{display:flex;align-items:center;gap:.6rem;margin-top:.55rem;
+  font-family:var(--mono);font-size:.7rem;color:var(--muted);flex-wrap:wrap}
+.mini{background:transparent;border:1px solid var(--rule);color:var(--muted);
+  padding:.32rem .68rem;border-radius:7px;font-family:var(--mono);font-size:.67rem;
+  letter-spacing:.08em;text-transform:uppercase}
+.mini:hover:not(:disabled){border-color:var(--green-edge);color:var(--green)}
+
+/* ---------- progress / questions ---------- */
+.progress{display:flex;align-items:center;gap:.85rem;margin-bottom:1.75rem}
+.track{flex:1;height:3px;background:var(--rule);border-radius:2px;overflow:hidden}
+.fill{height:100%;background:var(--brass);width:0;transition:width .4s ease}
+.count{font-family:var(--mono);font-size:.78rem;color:var(--muted);white-space:nowrap}
+.voicetag{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--brass-dim);white-space:nowrap}
+.q{margin-top:1.4rem;padding-top:1.35rem;border-top:1px solid var(--rule)}
+.q:first-of-type{border-top:none;padding-top:0}
+.qtext{font-family:var(--display);font-size:1.12rem;font-weight:500;margin:0 0 .2rem}
+.qhint{font-size:.86rem;color:var(--muted);margin:0}
+.locked{opacity:.35;pointer-events:none;transition:opacity .3s}
+.footer{display:flex;justify-content:flex-end;align-items:center;gap:1rem;margin-top:1.75rem;flex-wrap:wrap}
+.hint{font-size:.85rem;color:var(--muted)}
+
+.screen{display:none;animation:rise .45s ease both}
+.screen.active{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.tiers{display:grid;gap:.85rem;margin:var(--step) 0}
+.tier{display:flex;justify-content:space-between;align-items:center;gap:1rem;
+  background:var(--slate);border:1px solid var(--rule);color:var(--pearl);
+  padding:1.05rem 1.25rem;text-align:left;width:100%}
+.tier:hover{border-color:var(--brass);background:var(--slate-hi)}
+.tier .t-name{font-family:var(--display);font-size:1.15rem;font-weight:500}
+.tier .t-sub{font-size:.85rem;color:var(--muted)}
+.tier .t-time{font-family:var(--mono);font-size:.8rem;color:var(--brass);white-space:nowrap}
+.field{margin:1.1rem 0} .field .qtext{font-size:1rem}
+ol.steps{padding-left:1.1rem;color:#c3cad6} ol.steps li{margin:.5rem 0}
+pre,textarea.json{background:#0d1017;border:1px solid var(--rule);border-radius:10px;
+  padding:.9rem;font-family:var(--mono);font-size:.75rem;color:#b9c2d1;
+  width:100%;overflow:auto}
+textarea.json{height:150px;resize:vertical;line-height:1.4}
+.banner{border:1px dashed var(--brass-dim);border-radius:10px;padding:.7rem .95rem;
+  font-size:.85rem;color:#c8b184;background:rgba(216,161,58,.05);margin-bottom:var(--step)}
+.reward{border:1px solid var(--green-edge);background:var(--green-dim);
+  border-radius:12px;padding:.9rem 1.1rem;margin:var(--step) 0;font-size:.9rem;color:#bfe0cc}
+input.name{background:#0d1017;border:1px solid var(--rule);border-radius:9px;
+  color:var(--pearl);font:inherit;padding:.65rem .8rem;width:100%;max-width:340px}
+input.name:focus{outline:2px solid var(--brass);outline-offset:2px}
+
+/* ---------- certificate ---------- */
+.cert{background:#fbf7ee;color:#241d10;border-radius:6px;padding:clamp(1.1rem,4vw,2rem);
+  border:1px solid #d9cdb0;box-shadow:0 20px 50px rgba(0,0,0,.4);text-align:center;
+  position:relative;overflow:hidden}
+.cert-inner{position:relative;border:1px solid rgba(184,147,63,.5);
+  --band:clamp(17px,3.6vw,26px);
+  padding:calc(var(--band) + clamp(1.1rem,3.5vw,2rem))
+          calc(var(--band) + clamp(1rem,3.5vw,2rem))
+          calc(var(--band) + clamp(1.3rem,4vw,2.3rem))}
+.cert-inner > *{position:relative;z-index:1}
+.cert-inner > .frame{z-index:0}
+/* The frame is the artwork, tiled. Each run is clipped flat where it meets the
+   rectangle — no mitred corners, the stave simply stops at the edge. */
+.frame{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.f{position:absolute;opacity:.55}
+.f-top,.f-bot{left:0;right:0;height:var(--band);
+  background:url(assets/stave-h.png) repeat-x;background-size:auto var(--band)}
+.f-top{top:0} .f-bot{bottom:0;transform:rotate(180deg)}
+.f-left,.f-right{top:var(--band);bottom:var(--band);width:var(--band);
+  background:url(assets/stave-v.png) repeat-y;background-size:var(--band) auto}
+.f-left{left:0} .f-right{right:0;transform:rotate(180deg)}
+.f-rule{position:absolute;inset:var(--band);border:1px solid rgba(184,147,63,.45)}
+.cert h2{font-family:var(--display);font-weight:700;font-size:clamp(1.3rem,4.5vw,1.9rem);
+  letter-spacing:-.02em;margin:.5rem 0 .1rem;color:#241d10}
+.cert-eyebrow{font-family:var(--mono);font-size:.64rem;letter-spacing:.3em;
+  text-transform:uppercase;color:#8a6a2c}
+.cert-name{font-family:var(--display);font-size:clamp(1.5rem,5.5vw,2.2rem);font-weight:500;
+  margin:1.3rem auto .3rem;border-bottom:1px solid #cbbd97;display:inline-block;
+  padding:0 1.5rem .3rem;min-width:55%;color:#241d10}
+.cert p{color:#4a3f2c;max-width:44ch;margin:.7rem auto;font-size:.95rem}
+.cert-meta{display:flex;justify-content:center;gap:2.2rem;margin-top:1.7rem;
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+  color:#8a7a5c;flex-wrap:wrap}
+.seal{width:62px;height:62px;margin:1.3rem auto 0;border-radius:50%;
+  border:2px solid #b8933f;display:grid;place-items:center;
+  font-family:var(--display);font-size:1.5rem;color:#b8933f}
+@media print{
+  body::before{display:none} body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .screen{display:none!important}
+  #s-cert{display:block!important;animation:none}
+  .noprint{display:none!important}
+  .cert{box-shadow:none;border:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============ WELCOME ============ -->
+<section id="s-welcome" class="screen active">
+  <div class="eyebrow">Listening study</div>
+  <h1>Two continuations.<br>One phrase.</h1>
+  <p class="lede">You'll hear a short phrase written by a composer, a brief pause, and then
+  a continuation written by a computer model. Two different models continued the same
+  phrase. Your job is to say which continuation you prefer — twice, on two different
+  questions.</p>
+  <p class="lede muted">No musical training needed. There are no right answers, and you
+  can't get it wrong.</p>
+
+  <div id="cfg-banner" class="banner" hidden></div>
+
+  <div class="reward">
+    <strong>Finish a run and you get a certificate</strong> — printable, suitable for
+    framing, and redeemable for one sweet treat next time we meet. Any length counts, so
+    take the one you'll actually enjoy rather than the longest.
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <p class="qtext">How are you listening?</p>
+      <p class="qhint">Headphones make the differences easier to hear, but either is fine.</p>
+      <div class="choices" id="q-device">
+        <button class="choice" data-v="headphones" aria-pressed="false"><span class="tag">Option A</span>Headphones or earbuds</button>
+        <button class="choice" data-v="speakers" aria-pressed="false"><span class="tag">Option B</span>Speakers</button>
+      </div>
+    </div>
+    <div class="field">
+      <p class="qtext">Do you play or write music?</p>
+      <p class="qhint">Only used to group the results.</p>
+      <div class="choices" id="q-training">
+        <button class="choice" data-v="musician" aria-pressed="false"><span class="tag">Option A</span>Yes, regularly</button>
+        <button class="choice" data-v="non-musician" aria-pressed="false"><span class="tag">Option B</span>Not really</button>
+      </div>
+    </div>
+  </div>
+
+  <h2>Pick a length</h2>
+  <p class="muted small">Every option covers the main comparison. Longer ones just add more phrases.</p>
+  <div class="tiers" id="tier-list"></div>
+</section>
+
+<!-- ============ CALIBRATION ============ -->
+<section id="s-calib" class="screen">
+  <div class="eyebrow">Before you start</div>
+  <h2>This is the composer's music</h2>
+  <p class="lede">Three short excerpts, written entirely by the composer — no computer
+  involved. Listen to all three. Later you'll be asked which continuation sounds like it
+  came from the same person, so this is your reference point.</p>
+  <div class="card" id="calib-clips"></div>
+  <div class="footer">
+    <span class="hint" id="calib-hint">Play all three to continue</span>
+    <button class="btn" id="calib-next" disabled>Start listening</button>
+  </div>
+</section>
+
+<!-- ============ TRIAL ============ -->
+<section id="s-trial" class="screen">
+  <div class="progress">
+    <div class="track"><div class="fill" id="prog-fill"></div></div>
+    <span class="voicetag" id="voice-tag"></span>
+    <div class="count" id="prog-count">1 / 16</div>
+  </div>
+  <h2>Which continuation?</h2>
+  <p class="muted small">Both start with the same composer phrase. Play each one right
+  through, then replay whichever part you like before answering. The instrument changes
+  from screen to screen just for variety — it's always the same for both continuations
+  you're comparing.</p>
+
+  <div class="card" id="clip-card">
+    <div class="clip" id="clip-a"></div>
+    <div class="clip" id="clip-b"></div>
+  </div>
+
+  <div class="card" id="questions">
+    <div class="q">
+      <p class="qtext">Which continuation sounds like the same composer wrote it?</p>
+      <p class="qhint">Think about the style of the reference excerpts, not which is prettier.</p>
+      <div class="choices" id="q-style">
+        <button class="choice" data-v="a" aria-pressed="false"><span class="tag">First</span>Continuation 1</button>
+        <button class="choice" data-v="b" aria-pressed="false"><span class="tag">Second</span>Continuation 2</button>
+      </div>
+    </div>
+    <div class="q">
+      <p class="qtext">Which is the better piece of music?</p>
+      <p class="qhint">Ignore style here. Which one would you rather listen to?</p>
+      <div class="choices" id="q-quality">
+        <button class="choice" data-v="a" aria-pressed="false"><span class="tag">First</span>Continuation 1</button>
+        <button class="choice" data-v="b" aria-pressed="false"><span class="tag">Second</span>Continuation 2</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="hint" id="trial-hint">Play both continuations first</span>
+    <button class="btn" id="trial-next" disabled>Next</button>
+  </div>
+</section>
+
+<!-- ============ DONE ============ -->
+<section id="s-done" class="screen">
+  <div class="eyebrow">Finished</div>
+  <h1>Thank you.</h1>
+  <p class="lede">That's everything. Your answers are printed below and stay on this
+  screen — nothing is lost even if the download misbehaves.</p>
+
+  <div class="card">
+    <p class="small muted" id="done-summary"></p>
+    <textarea class="json" id="json-out" readonly spellcheck="false"></textarea>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem">
+      <button class="btn" id="dl">Download my answers</button>
+      <button class="btn-ghost" id="copy">Copy to clipboard</button>
+      <button class="btn-ghost" id="cert-go">Get my certificate</button>
+    </div>
+    <p class="small muted" id="dl-note" style="margin-bottom:0"></p>
+  </div>
+
+  <details class="card">
+    <summary style="cursor:pointer">What was being tested?</summary>
+    <p class="small">Both continuations came from the same model. Before writing, one was
+    shown a few phrases from the composer's back catalogue chosen because they resemble the
+    opening phrase; the other was shown phrases picked at random. The study asks whether
+    choosing <em>relevant</em> material makes the result sound more like the composer.
+    Telling you afterwards rather than beforehand is what keeps the answers honest.</p>
+  </details>
+</section>
+
+<!-- ============ CERTIFICATE ============ -->
+<section id="s-cert" class="screen">
+  <div class="noprint">
+    <div class="eyebrow">Your certificate</div>
+    <h2>Put your name on it</h2>
+    <p class="muted small">Typed here only — it never leaves this page and isn't included
+    in your answers file.</p>
+    <div style="margin:1rem 0 1.75rem">
+      <input class="name" id="cert-name" placeholder="Your name" autocomplete="name">
+    </div>
+  </div>
+
+  <div class="cert">
+    <div class="cert-inner">
+      <div class="frame" aria-hidden="true">
+        <i class="f f-top"></i><i class="f f-bot"></i>
+        <i class="f f-left"></i><i class="f f-right"></i>
+        <i class="f-rule"></i>
+      </div>
+      <div class="cert-eyebrow">Certificate of careful listening</div>
+      <h2>Awarded to</h2>
+      <div class="cert-name" id="cert-name-out">&nbsp;</div>
+      <p>For sitting still, paying attention, and giving honest opinions about music
+      written partly by a person and partly by a machine — thereby advancing the
+      scientific record more than most.</p>
+      <p style="font-weight:600;color:#241d10">Redeemable for one (1) sweet treat, in
+      person, on presentation of this document.</p>
+      <div class="seal">&#9834;</div>
+      <div class="cert-meta">
+        <span id="cert-tier">Standard run</span>
+        <span id="cert-count">16 comparisons</span>
+        <span id="cert-date">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer noprint">
+    <button class="btn-ghost" id="cert-back">Back to my answers</button>
+    <button class="btn" id="cert-print">Print or save as PDF</button>
+  </div>
+</section>
+
+<!-- ============ SETUP ============ -->
+<section id="s-setup" class="screen">
+  <div class="eyebrow">Researcher setup</div>
+  <h2>Wiring in your audio</h2>
+  <p class="lede">The study runs in demo mode right now, synthesising placeholder melodies
+  so you can walk the whole flow. To run it for real:</p>
+  <ol class="steps">
+    <li>Render each clip as <code>seed → 2s silence → continuation</code>, one file per
+    system per seed.</li>
+    <li>Give every file an <strong>opaque name</strong> — <code>c/9f3a1b.mp3</code>, not
+    <code>Aprime/el_mar.mp3</code>. Filenames show up in the network tab.</li>
+    <li>Paste your sessions into <code>CONFIG.sessions</code> and set
+    <code>CONFIG.demo = false</code>.</li>
+    <li>Each clip needs <code>boundary</code> (seconds at which the continuation begins)
+    and <code>duration</code>, so the handoff bar can draw itself. Add
+    <code>instrument</code> per trial and it's shown on screen and recorded in the results.</li>
+    <li>Assign the instrument <strong>by seed</strong>, so both clips in a pair share one
+    timbre. A timbre difference inside a pair would get judged instead of the melody.</li>
+    <li>Apply a ~15&nbsp;ms fade where the seed ends and where the continuation starts, or
+    a note cut mid-attack will click.</li>
+  </ol>
+  <pre>{
+  "participant": 7, "tier": "standard",
+  "calibration": ["calib/01.mp3","calib/02.mp3","calib/03.mp3"],
+  "trials": [
+    { "seed": "el_mar_idx04", "instrument": "oboe",
+      "clip_a": { "url":"c/9f3a1b.mp3", "boundary": 8.0, "duration": 18.0 },
+      "clip_b": { "url":"c/2e77c4.mp3", "boundary": 8.0, "duration": 18.0 } }
+  ]
+}</pre>
+  <div class="footer"><button class="btn" id="setup-back">Try the demo</button></div>
+</section>
+
+</div>
+
+<script>
+/* ============================================================ CONFIG */
+const CONFIG = {
+  demo: true,
+  audioBase: "",
+  tiers: [
+    { id:"quick",    name:"Quick",    trials:8,  mins:"about 8 minutes",  sub:"8 phrases" },
+    { id:"standard", name:"Standard", trials:15, mins:"about 14 minutes", sub:"15 phrases — the full set" },
+    { id:"full",     name:"Full",     trials:23, mins:"about 22 minutes", sub:"15 phrases plus 8 extra comparisons" }
+  ],
+  /* PASTE manifest.py output here */
+  sessions: []
+};
+
+/* Voice presets for the demo synth. Waveform choices aren't arbitrary: a clarinet's
+   spectrum really is dominated by odd harmonics (square), a horn is mellow (triangle
+   behind a low filter). Both clips on a screen ALWAYS share one voice — a timbre
+   difference inside a pair would be judged instead of the melody. */
+const VOICES=[
+  {name:"flute",    type:"sine",     cutoff:5000, attack:.030, oct:  0, gain:.20},
+  {name:"oboe",     type:"sawtooth", cutoff:2200, attack:.010, oct:  0, gain:.11},
+  {name:"clarinet", type:"square",   cutoff:1700, attack:.016, oct:-12, gain:.10},
+  {name:"trumpet",  type:"sawtooth", cutoff:3200, attack:.008, oct:  0, gain:.10},
+  {name:"horn",     type:"triangle", cutoff:1100, attack:.045, oct:-12, gain:.20}
+];
+const voiceFor=i=>VOICES[i%VOICES.length];
+
+/* ============================================================ utils */
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const $=id=>document.getElementById(id);
+const show=id=>document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));
+
+/* ============================================================ players */
+let audioCtx=null;
+const ac=()=>audioCtx||(audioCtx=new (window.AudioContext||window.webkitAudioContext)());
+const RELEASE=.06, MIN_NOTE=.08;
+
+class SynthPlayer{
+  constructor(key,{seedSecs=6,pause=2,contSecs=10,voice=VOICES[0]}={}){
+    this.voice=voice;
+    this.seedEnd=seedSecs; this.boundary=seedSecs+pause;
+    this.duration=seedSecs+pause+contSecs;
+    this.notes=this._compose(key,seedSecs,contSecs);
+    this.playing=false; this._nodes=[];
+  }
+  _compose(key,seedSecs,contSecs){
+    const r=rng(hash(key)), scale=[0,2,4,5,7,9,11,12,14,16], out=[];
+    let deg=4;
+    // A note is written only if it fits ENTIRELY inside its segment. Truncating one
+    // at the segment edge is what produced the click at the handoff.
+    const run=(from,span)=>{
+      let t=0;
+      while(span-t>=MIN_NOTE){
+        const dur=[.2,.25,.3,.45,.6,.95][Math.floor(r()*6)];
+        const d=Math.min(dur*.92,span-t-.02);
+        if(d>=MIN_NOTE){
+          deg=Math.max(0,Math.min(scale.length-1,deg+Math.round((r()-.5)*4)));
+          out.push({t:from+t,d,midi:62+scale[deg]});
+        }
+        t+=dur;
+      }
+    };
+    run(0,seedSecs); run(this.boundary,contSecs);
+    return out;
+  }
+  play(onTick,onEnd,offset=0){
+    const ctx=ac(); if(ctx.state==="suspended")ctx.resume();
+    this.stop(); this.playing=true;
+    const v=this.voice, t0=ctx.currentTime+.08;
+    for(const n of this.notes){
+      const rel=n.t-offset, end=rel+n.d;
+      if(end<=.02)continue;                        // entirely before the seek point
+      const s=t0+Math.max(rel,0), e=t0+end;
+      if(e-s<.03)continue;
+      const o=ctx.createOscillator(), g=ctx.createGain(), f=ctx.createBiquadFilter();
+      o.type=v.type;
+      o.frequency.value=440*Math.pow(2,(n.midi+v.oct-69)/12);
+      f.type="lowpass"; f.frequency.value=v.cutoff; f.Q.value=.7;
+      const peak=Math.min(s+v.attack,e-.005), rel0=Math.max(peak,e-RELEASE);
+      g.gain.setValueAtTime(0,s);
+      g.gain.linearRampToValueAtTime(v.gain,peak);
+      g.gain.setValueAtTime(v.gain,rel0);
+      g.gain.linearRampToValueAtTime(0,e);         // linear to true zero — no tail click
+      o.connect(f).connect(g).connect(ctx.destination);
+      o.start(s); o.stop(e+.02);
+      this._nodes.push({o,g});
+    }
+    const started=performance.now();
+    const step=()=>{
+      if(!this.playing)return;
+      const el=offset+(performance.now()-started)/1000;
+      if(el>=this.duration){this.playing=false;onTick(this.duration);onEnd();return}
+      onTick(el); this._raf=requestAnimationFrame(step);
+    };
+    this._raf=requestAnimationFrame(step);
+  }
+  stop(){
+    this.playing=false; cancelAnimationFrame(this._raf);
+    if(!audioCtx){this._nodes=[];return}
+    const now=audioCtx.currentTime;
+    this._nodes.forEach(({o,g})=>{ try{
+      g.gain.cancelScheduledValues(now);
+      g.gain.setValueAtTime(g.gain.value,now);
+      g.gain.linearRampToValueAtTime(0,now+.03);   // fade out, never a hard cut
+      o.stop(now+.05);
+    }catch(e){} });
+    this._nodes=[];
+  }
+}
+
+class FilePlayer{
+  constructor(url,boundary,duration){
+    this.el=new Audio(CONFIG.audioBase+url); this.el.preload="auto";
+    this.boundary=boundary; this.duration=duration; this.playing=false;
+  }
+  play(onTick,onEnd,offset=0){
+    this.stop(); this.playing=true;
+    try{this.el.currentTime=offset}catch(e){}
+    this._tick=()=>onTick(this.el.currentTime);
+    this._end=()=>{this.playing=false;onTick(this.duration);onEnd()};
+    this.el.addEventListener("timeupdate",this._tick);
+    this.el.addEventListener("ended",this._end,{once:true});
+    this.el.play().catch(()=>{this.playing=false;onEnd()});
+  }
+  stop(){this.playing=false;this.el.pause();
+    if(this._tick)this.el.removeEventListener("timeupdate",this._tick)}
+}
+const makePlayer=(spec,key,voice)=>CONFIG.demo
+  ? new SynthPlayer(key,{voice})
+  : new FilePlayer(spec.url,spec.boundary,spec.duration);
+
+/* ============================================================ handoff bar */
+function renderBar(host,label,player,onComplete,opts={}){
+  // Calibration excerpts are composer material end to end -- no handoff exists, so
+  // they render as one continuous brass run rather than borrowing the trial layout.
+  const solid=!!opts.solid;
+  const pctSeed=solid?100:Math.max(0,(player.boundary-2))/player.duration*100;
+  const pctGap=solid?0:Math.min(2,player.boundary)/player.duration*100;
+  host.innerHTML=`
+    <div class="cliphead">
+      <span class="clipname">${label}</span>
+      <span class="phase" role="status">Not played yet</span>
+    </div>
+    <div class="bar" role="button" tabindex="0" aria-label="Play ${label}">
+      <div class="seg seg-seed" style="left:0;width:${pctSeed}%"></div>
+      ${solid?"":`
+      <div class="seg seg-gap" style="left:${pctSeed}%;width:${pctGap}%"></div>
+      <div class="seg seg-cont" style="left:${pctSeed+pctGap}%;right:0"></div>
+      <div class="handoff-pulse" style="left:${pctSeed+pctGap}%"></div>
+      <div class="barlabel" style="left:${pctSeed+pctGap+2}%">Continuation</div>`}
+      <div class="ticks"></div>
+      <div class="playhead"></div>
+      <div class="barlabel" style="left:14px">${solid?"Composer, throughout":"Composer's phrase"}</div>
+      <button class="playbtn" tabindex="-1" aria-hidden="true">&#9654;</button>
+    </div>
+    <div class="cliptools">
+      ${solid?"":'<button class="mini" data-act="cont" disabled>Continuation only</button>'}
+      <button class="mini" data-act="all" disabled>From the top</button>
+      <span class="reps"></span>
+    </div>`;
+
+  const bar=host.querySelector(".bar"), head=host.querySelector(".playhead"),
+        phase=host.querySelector(".phase"), pulse=host.querySelector(".handoff-pulse"),
+        btn=host.querySelector(".playbtn"), reps=host.querySelector(".reps"),
+        ticks=host.querySelector(".ticks"),
+        bCont=host.querySelector('[data-act="cont"]'),
+        bAll=host.querySelector('[data-act="all"]');
+
+  for(let s=1;s<player.duration;s++){
+    const t=document.createElement("div");
+    t.className="tick"; t.style.left=(s/player.duration*100)+"%"; ticks.appendChild(t);
+  }
+
+  let plays=0, heard=false, crossed=false;
+  const setPhase=(txt,cls)=>{phase.textContent=txt;phase.className="phase "+(cls||"")};
+  const tick=t=>{
+    head.classList.add("on");
+    head.style.left=Math.min(t/player.duration,1)*100+"%";
+    if(solid){setPhase("Playing","is-seed");return}
+    if(t<player.boundary-2)setPhase("Composer's phrase","is-seed");
+    else if(t<player.boundary)setPhase("\u2026","");
+    else{ setPhase("Continuation","is-cont");
+      if(!crossed){crossed=true;pulse.classList.add("fire");
+        setTimeout(()=>pulse.classList.remove("fire"),950)} }
+  };
+  const stopped=()=>{btn.innerHTML="&#9654;";head.classList.remove("on")};
+  const end=()=>{
+    stopped();
+    if(!heard){heard=true;host.classList.add("done");
+      if(bCont)bCont.disabled=false; bAll.disabled=false}
+    setPhase("Played \u2713","is-done");
+    reps.textContent=plays===1?"played once":"played "+plays+"\u00d7";
+    onComplete(plays);
+  };
+  const start=off=>{
+    if(player.playing){player.stop();stopped();return}
+    plays++; crossed=off>=player.boundary; btn.innerHTML="&#9632;";
+    player.play(tick,end,off);
+  };
+  bar.addEventListener("click",e=>{
+    // Until it has been heard once end-to-end the bar is play/pause only, so nobody
+    // can skip the composer's phrase and judge a continuation out of context.
+    if(!heard){start(0);return}
+    const r=bar.getBoundingClientRect();
+    start(Math.max(0,Math.min(.98,(e.clientX-r.left)/r.width))*player.duration);
+  });
+  bar.addEventListener("keydown",e=>{
+    if(e.key===" "||e.key==="Enter"){e.preventDefault();start(0)}
+  });
+  if(bCont)bCont.addEventListener("click",e=>{e.stopPropagation();start(Math.max(0,player.boundary-.12))});
+  bAll.addEventListener("click",e=>{e.stopPropagation();start(0)});
+  return {stop:()=>player.stop()};
+}
+
+/* ============================================================ merge animation */
+function mergeCard(card){
+  const cs=getComputedStyle(card);
+  const padT=parseFloat(cs.paddingTop), padB=parseFloat(cs.paddingBottom),
+        padL=parseFloat(cs.paddingLeft), padR=parseFloat(cs.paddingRight);
+  const cr=card.getBoundingClientRect();
+  card.querySelectorAll(".clip").forEach(clip=>{
+    const r=clip.getBoundingClientRect();
+    // Every clip's halo expands to the SAME rectangle (the card's inner box), so the
+    // separate panels land on top of one another and read as a single shape.
+    clip.style.setProperty("--exp-top",   -(r.top-cr.top-padT+1)+"px");
+    clip.style.setProperty("--exp-bottom",-(cr.bottom-r.bottom-padB+1)+"px");
+    clip.style.setProperty("--exp-left",  -(padL-1)+"px");
+    clip.style.setProperty("--exp-right", -(padR-1)+"px");
+  });
+  card.classList.add("merged");
+  setTimeout(()=>card.classList.add("settled"),540);
+}
+
+/* ============================================================ session */
+const params=new URLSearchParams(location.search);
+const state={
+  participant:params.get("p")||String(Math.floor(Math.random()*1e6)),
+  tier:null,device:null,training:null,session:null,trials:[],index:0,
+  answers:[],startedAt:null
+};
+const N_SEEDS = 15;   // usable seeds after collapse filtering (see select_clips.py)
+function demoSession(tier){
+  const n=CONFIG.tiers.find(t=>t.id===tier).trials;
+  const seeds=Array.from({length:N_SEEDS},(_,i)=>"seed_"+String(i+1).padStart(2,"0"));
+  const r=rng(hash(state.participant+tier)), off=Math.floor(r()*seeds.length), trials=[];
+  for(let i=0;i<n;i++){
+    const seed=seeds[(off+i)%seeds.length], flip=r()<.5;
+    trials.push({seed,
+      clip_a:{url:seed+"-"+(flip?"y":"x"),boundary:8,duration:18},
+      clip_b:{url:seed+"-"+(flip?"x":"y"),boundary:8,duration:18}});
+  }
+  return{participant:state.participant,tier,calibration:["c1","c2","c3"],trials};
+}
+function pickSession(tier){
+  if(CONFIG.sessions.length){
+    const pool=CONFIG.sessions.filter(s=>s.tier===tier);
+    if(pool.length)return JSON.parse(JSON.stringify(
+      pool[Math.abs(hash(state.participant))%pool.length]));
+  }
+  return demoSession(tier);
+}
+
+/* ============================================================ welcome */
+function radio(groupId,onPick){
+  $(groupId).addEventListener("click",e=>{
+    const b=e.target.closest(".choice"); if(!b)return;
+    [...$(groupId).querySelectorAll(".choice")]
+      .forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    onPick(b.dataset.v);
+  });
+}
+CONFIG.tiers.forEach(t=>{
+  const b=document.createElement("button");
+  b.className="tier";
+  b.innerHTML='<span><span class="t-name">'+t.name+'</span><br><span class="t-sub">'
+    +t.sub+'</span></span><span class="t-time">'+t.mins+'</span>';
+  b.addEventListener("click",()=>startTier(t.id));
+  $("tier-list").appendChild(b);
+});
+radio("q-device",v=>state.device=v);
+radio("q-training",v=>state.training=v);
+if(CONFIG.demo){
+  const b=$("cfg-banner"); b.hidden=false;
+  b.innerHTML='Demo mode — audio is synthesised placeholder melody. '+
+    '<a href="#" id="setup-link" style="color:var(--brass)">Researcher setup</a>';
+  $("setup-link").addEventListener("click",e=>{e.preventDefault();show("s-setup")});
+}
+$("setup-back").addEventListener("click",()=>show("s-welcome"));
+
+function startTier(tier){
+  state.tier=tier;
+  state.session=pickSession(tier);
+  const want=CONFIG.tiers.find(t=>t.id===tier).trials;
+  // Trust the manifest over the label: if a tier promises more trials than the
+  // session supplies, run what exists rather than silently ending early.
+  state.trials=state.session.trials.slice(0,want);
+  if(state.trials.length<want)
+    console.warn(`tier "${tier}" wanted ${want} trials, session has ${state.trials.length}`);
+  state.startedAt=new Date().toISOString();
+  buildCalibration(); show("s-calib"); window.scrollTo(0,0);
+}
+
+/* ============================================================ calibration */
+function buildCalibration(){
+  const host=$("calib-clips"); host.innerHTML="";
+  host.classList.remove("merged","settled");
+  const done=new Set();
+  state.session.calibration.forEach((c,i)=>{
+    const div=document.createElement("div"); div.className="clip"; host.appendChild(div);
+    const spec=typeof c==="string"?{url:c,boundary:2,duration:10}:c;
+    // Rotate voices here too: the real corpus melodies come from varied instruments.
+    const p=CONFIG.demo
+      ? new SynthPlayer("calib"+i,{seedSecs:9,pause:0,contSecs:0,voice:voiceFor(i)})
+      : new FilePlayer(spec.url,spec.duration,spec.duration);
+    renderBar(div,"Excerpt "+(i+1),p,()=>{
+      done.add(i);
+      if(done.size===state.session.calibration.length){
+        mergeCard(host);
+        $("calib-next").disabled=false;
+        $("calib-hint").textContent="Ready when you are";
+      }
+    },{solid:true});
+  });
+}
+$("calib-next").addEventListener("click",()=>{renderTrial();show("s-trial");window.scrollTo(0,0)});
+
+/* ============================================================ trials */
+let current={played:new Set(),style:null,quality:null,shownAt:0,players:[],instrument:null};
+function renderTrial(){
+  const t=state.trials[state.index];
+  // ONE voice per screen, shared by both clips. Varying it inside a pair would let
+  // people pick the timbre they prefer instead of the melody.
+  const voice=voiceFor(state.index);
+  const instrument=CONFIG.demo?voice.name:(t.instrument||null);
+
+  current={played:new Set(),style:null,quality:null,shownAt:performance.now(),
+           players:[],instrument};
+  $("prog-count").textContent=(state.index+1)+" / "+state.trials.length;
+  $("prog-fill").style.width=(state.index/state.trials.length*100)+"%";
+  $("voice-tag").textContent=instrument||"";
+  ["q-style","q-quality"].forEach(g=>$(g).querySelectorAll(".choice")
+    .forEach(b=>b.setAttribute("aria-pressed","false")));
+  $("questions").classList.add("locked");
+  $("trial-next").disabled=true;
+  $("trial-hint").textContent="Play both continuations first";
+
+  const card=$("clip-card");
+  card.classList.remove("merged","settled");
+  [["clip-a","Continuation 1","clip_a"],["clip-b","Continuation 2","clip_b"]]
+    .forEach(function(entry,i){
+      const host=$(entry[0]); host.classList.remove("done");
+      const p=makePlayer(t[entry[2]],t.seed+"|"+t[entry[2]].url,voice);
+      current.players.push(p);
+      renderBar(host,entry[1],p,()=>{
+        current.played.add(i);
+        if(current.played.size===2){
+          mergeCard(card);
+          $("questions").classList.remove("locked");
+          $("trial-hint").textContent="Answer both questions";
+        }
+      });
+    });
+}
+radio("q-style",v=>{current.style=v;maybeEnable()});
+radio("q-quality",v=>{current.quality=v;maybeEnable()});
+function maybeEnable(){
+  const ok=current.style&&current.quality&&current.played.size===2;
+  $("trial-next").disabled=!ok;
+  if(ok)$("trial-hint").textContent=state.index===state.trials.length-1?"Last one":"";
+}
+$("trial-next").addEventListener("click",()=>{
+  const t=state.trials[state.index];
+  current.players.forEach(p=>p.stop());
+  state.answers.push({seed:t.seed,clip_a:t.clip_a.url,clip_b:t.clip_b.url,
+    instrument:current.instrument,
+    chose_style:current.style,chose_quality:current.quality,
+    seconds:+((performance.now()-current.shownAt)/1000).toFixed(1)});
+  state.index++;
+  if(state.index>=state.trials.length)finish();
+  else{renderTrial();window.scrollTo(0,0)}
+});
+
+/* ============================================================ done + export */
+function results(){
+  return{participant:state.participant,tier:state.tier,device:state.device,
+    training:state.training,demo:CONFIG.demo,startedAt:state.startedAt,
+    finishedAt:new Date().toISOString(),userAgent:navigator.userAgent,
+    trials:state.answers};
+}
+function finish(){
+  $("prog-fill").style.width="100%";
+  const a=state.answers.filter(x=>x.chose_style==="a").length;
+  $("done-summary").textContent=state.answers.length+" comparisons \u00b7 participant "
+    +state.participant+" \u00b7 chose the first continuation "+a+" time"
+    +(a===1?"":"s")+" on style";
+  // Answers are written to the page BEFORE any download is attempted, so a blocked
+  // or sandboxed download can never be the thing that loses them.
+  $("json-out").value=JSON.stringify(results(),null,2);
+  show("s-done"); window.scrollTo(0,0);
+}
+$("dl").addEventListener("click",()=>{
+  const note=$("dl-note");
+  try{
+    const blob=new Blob([JSON.stringify(results(),null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download="listening_"+state.participant+"_"+state.tier+".json";
+    a.rel="noopener"; a.style.display="none";
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},4000);
+    note.textContent="Saved to your downloads. If nothing appeared, copy the text above instead.";
+  }catch(err){
+    note.textContent="This browser blocked the download — select the text above and copy it instead.";
+  }
+});
+$("copy").addEventListener("click",async e=>{
+  const t=$("json-out");
+  try{
+    await navigator.clipboard.writeText(t.value);
+    e.target.textContent="Copied";
+    setTimeout(()=>e.target.textContent="Copy to clipboard",1800);
+  }catch(err){
+    t.focus(); t.select(); e.target.textContent="Now press Ctrl/Cmd + C";
+  }
+});
+
+/* ============================================================ certificate */
+$("cert-go").addEventListener("click",()=>{
+  const tier=CONFIG.tiers.find(t=>t.id===state.tier)||{name:"Listening"};
+  $("cert-tier").textContent=tier.name+" run";
+  $("cert-count").textContent=state.answers.length+" comparisons";
+  $("cert-date").textContent=new Date().toLocaleDateString(undefined,
+    {year:"numeric",month:"long",day:"numeric"});
+  show("s-cert"); window.scrollTo(0,0); $("cert-name").focus();
+});
+$("cert-name").addEventListener("input",e=>{
+  $("cert-name-out").textContent=e.target.value.trim()||"\u00a0";
+});
+$("cert-back").addEventListener("click",()=>{show("s-done");window.scrollTo(0,0)});
+$("cert-print").addEventListener("click",()=>window.print());
+</script>
+</body>
+</html>
