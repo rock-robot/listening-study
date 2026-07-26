@@ -1,0 +1,246 @@
+{
+  "calibration": [
+    {
+      "file": "calib/01.mp3",
+      "boundary": 0,
+      "duration": 12.434
+    },
+    {
+      "file": "calib/02.mp3",
+      "boundary": 0,
+      "duration": 12.356
+    },
+    {
+      "file": "calib/03.mp3",
+      "boundary": 0,
+      "duration": 12.069
+    }
+  ],
+  "pairs": [
+    {
+      "pair": "s00",
+      "seed_hash": "edbd9919",
+      "instrument": "flute",
+      "clip_1": {
+        "file": "audio/s00_1.mp3",
+        "boundary": 7.5,
+        "duration": 20.349
+      },
+      "clip_2": {
+        "file": "audio/s00_2.mp3",
+        "boundary": 7.5,
+        "duration": 19.148
+      }
+    },
+    {
+      "pair": "s01",
+      "seed_hash": "160a2d9d",
+      "instrument": "flute",
+      "clip_1": {
+        "file": "audio/s01_1.mp3",
+        "boundary": 7.039,
+        "duration": 18.181
+      },
+      "clip_2": {
+        "file": "audio/s01_2.mp3",
+        "boundary": 7.039,
+        "duration": 19.226
+      }
+    },
+    {
+      "pair": "s02",
+      "seed_hash": "e6146390",
+      "instrument": "clarinet",
+      "clip_1": {
+        "file": "audio/s02_1.mp3",
+        "boundary": 7.5,
+        "duration": 19.487
+      },
+      "clip_2": {
+        "file": "audio/s02_2.mp3",
+        "boundary": 7.5,
+        "duration": 19.409
+      }
+    },
+    {
+      "pair": "s03",
+      "seed_hash": "a86ab2b4",
+      "instrument": "flute",
+      "clip_1": {
+        "file": "audio/s03_1.mp3",
+        "boundary": 7.5,
+        "duration": 19.252
+      },
+      "clip_2": {
+        "file": "audio/s03_2.mp3",
+        "boundary": 7.5,
+        "duration": 19.879
+      }
+    },
+    {
+      "pair": "s04",
+      "seed_hash": "19bdf79d",
+      "instrument": "flute",
+      "clip_1": {
+        "file": "audio/s04_1.mp3",
+        "boundary": 7.5,
+        "duration": 19.122
+      },
+      "clip_2": {
+        "file": "audio/s04_2.mp3",
+        "boundary": 7.5,
+        "duration": 15.491
+      }
+    },
+    {
+      "pair": "s05",
+      "seed_hash": "b8451ea1",
+      "instrument": "oboe",
+      "clip_1": {
+        "file": "audio/s05_1.mp3",
+        "boundary": 7.5,
+        "duration": 19.775
+      },
+      "clip_2": {
+        "file": "audio/s05_2.mp3",
+        "boundary": 7.5,
+        "duration": 19.278
+      }
+    },
+    {
+      "pair": "s06",
+      "seed_hash": "7165b063",
+      "instrument": "clarinet",
+      "clip_1": {
+        "file": "audio/s06_1.mp3",
+        "boundary": 7.5,
+        "duration": 19.487
+      },
+      "clip_2": {
+        "file": "audio/s06_2.mp3",
+        "boundary": 7.5,
+        "duration": 19.644
+      }
+    },
+    {
+      "pair": "s07",
+      "seed_hash": "12b79276",
+      "instrument": "trumpet",
+      "clip_1": {
+        "file": "audio/s07_1.mp3",
+        "boundary": 7.5,
+        "duration": 19.853
+      },
+      "clip_2": {
+        "file": "audio/s07_2.mp3",
+        "boundary": 7.5,
+        "duration": 20.193
+      }
+    },
+    {
+      "pair": "s08",
+      "seed_hash": "102df379",
+      "instrument": "flute",
+      "clip_1": {
+        "file": "audio/s08_1.mp3",
+        "boundary": 7.402,
+        "duration": 18.834
+      },
+      "clip_2": {
+        "file": "audio/s08_2.mp3",
+        "boundary": 7.402,
+        "duration": 19.54
+      }
+    },
+    {
+      "pair": "s09",
+      "seed_hash": "ff64f5b0",
+      "instrument": "oboe",
+      "clip_1": {
+        "file": "audio/s09_1.mp3",
+        "boundary": 7.5,
+        "duration": 15.778
+      },
+      "clip_2": {
+        "file": "audio/s09_2.mp3",
+        "boundary": 7.5,
+        "duration": 19.069
+      }
+    },
+    {
+      "pair": "s10",
+      "seed_hash": "f588cc49",
+      "instrument": "clarinet",
+      "clip_1": {
+        "file": "audio/s10_1.mp3",
+        "boundary": 7.5,
+        "duration": 19.644
+      },
+      "clip_2": {
+        "file": "audio/s10_2.mp3",
+        "boundary": 7.5,
+        "duration": 19.513
+      }
+    },
+    {
+      "pair": "s11",
+      "seed_hash": "35bc5f10",
+      "instrument": "flute",
+      "clip_1": {
+        "file": "audio/s11_1.mp3",
+        "boundary": 7.5,
+        "duration": 14.42
+      },
+      "clip_2": {
+        "file": "audio/s11_2.mp3",
+        "boundary": 7.5,
+        "duration": 20.349
+      }
+    },
+    {
+      "pair": "s12",
+      "seed_hash": "5f856295",
+      "instrument": "flute",
+      "clip_1": {
+        "file": "audio/s12_1.mp3",
+        "boundary": 7.5,
+        "duration": 20.349
+      },
+      "clip_2": {
+        "file": "audio/s12_2.mp3",
+        "boundary": 7.5,
+        "duration": 18.939
+      }
+    },
+    {
+      "pair": "s13",
+      "seed_hash": "29ffccab",
+      "instrument": "oboe",
+      "clip_1": {
+        "file": "audio/s13_1.mp3",
+        "boundary": 7.5,
+        "duration": 19.644
+      },
+      "clip_2": {
+        "file": "audio/s13_2.mp3",
+        "boundary": 7.5,
+        "duration": 19.853
+      }
+    },
+    {
+      "pair": "s14",
+      "seed_hash": "7e4d1c0e",
+      "instrument": "clarinet",
+      "clip_1": {
+        "file": "audio/s14_1.mp3",
+        "boundary": 3.834,
+        "duration": 15.047
+      },
+      "clip_2": {
+        "file": "audio/s14_2.mp3",
+        "boundary": 3.834,
+        "duration": 15.621
+      }
+    }
+  ]
+}
